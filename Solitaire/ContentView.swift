@@ -94,9 +94,6 @@ struct SoliteireCardStack: View {
                     .frame(width: cardSize.width, height: cardSize.height)
                     .padding(.top, (cardSize.height / 2.0) * CGFloat(index))
                     .shadow(color: .gray, radius: 1, y: -2)
-                    .onTapGesture {
-                        print(cards[index].name)
-                    }
             }
         }
     }

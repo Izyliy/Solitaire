@@ -6,8 +6,13 @@
 //
 
 import SwiftUI
+import UniformTypeIdentifiers
 
-struct Card {
+extension UTType {
+    static let card = UTType(exportedAs: "pvGrab.Solitare.Card")
+}
+
+struct Card: Codable, Transferable {
     let id: UUID
     let rank: Rank
     let suit: Suit
@@ -39,13 +44,17 @@ struct Card {
         }
     }
     
+    static var transferRepresentation: some TransferRepresentation {
+        CodableRepresentation(contentType: .card)
+    }
+    
     func getImage() -> some View {
         return Image(imageName)
             .resizable()
             .aspectRatio(contentMode: .fit)
     }
     
-    enum Rank: String, CaseIterable {
+    enum Rank: String, CaseIterable, Codable {
         case _2 = "2"
         case _3 = "3"
         case _4 = "4"
@@ -61,7 +70,7 @@ struct Card {
         case ace = "Ace"
     }
     
-    enum Suit: String, CaseIterable {
+    enum Suit: String, CaseIterable, Codable {
         case spades
         case hearts
         case diamonds
