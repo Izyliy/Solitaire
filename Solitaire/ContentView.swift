@@ -85,35 +85,46 @@ struct SoliteireMainField: View {
 
 struct SoliteireCardStack: View {
     @Binding var cardSize: CGSize
-    @State var draggedIndex: Int = -1
     @State var draggedOffset: CGSize = .zero
     
     let cards: [Card]
     
     var body: some View {
-        ZStack(alignment: .top) {
-            ForEach(0..<cards.count, id: \.self) { index in
-                getCardView(for: index)
+        if let card = cards.first {
+            ZStack(alignment: .top) {
+                getCardView(for: card)
+                if cards.count > 1 {
+                    let subDeck = Array(cards.dropFirst())
+                    SoliteireCardStack(cardSize: $cardSize, cards: subDeck)
+                        .padding(.top, (cardSize.height / 2.0))
+                }
             }
-        }
-    }
-    
-    func getCardView(for index: Int) -> some View {
-        cards[index].getImage()
-            .frame(width: cardSize.width, height: cardSize.height)
-            .padding(.top, (cardSize.height / 2.0) * CGFloat(index))
-            .shadow(color: .gray, radius: 1, y: -2)
-            .offset(draggedIndex == index ? draggedOffset : .zero)
+            .offset(draggedOffset)
             .gesture(DragGesture(coordinateSpace: .global)
                 .onChanged { value in
-                    draggedIndex = index
                     draggedOffset = value.translation
                 }
                 .onEnded { value in
-                    draggedIndex = -1
                     draggedOffset = .zero
                     print(value.predictedEndLocation)
                 }
             )
+        } else {
+            Image("Ace_spades")
+                .resizable()
+                .aspectRatio(contentMode: .fill)
+                .frame(width: cardSize.width, height: cardSize.height)
+                .opacity(0)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 10)
+                        .stroke(Color(red: 244/255, green: 247/255, blue: 224/255), lineWidth: 1)
+                )
+        }
+    }
+    
+    func getCardView(for card: Card) -> some View {
+        card.getImage()
+            .frame(width: cardSize.width, height: cardSize.height)
+            .shadow(color: .gray, radius: 1, y: -2)
     }
 }
