@@ -90,4 +90,10 @@ struct DeckBuilder {
         
         return deck
     }
+    
+    static func createRandomDeck(of size: Int = 5) -> [Card] {
+        let deck = create52Cards()
+        let arraySlice = deck.shuffled().prefix(size)
+        return Array(arraySlice)
+    }
 }

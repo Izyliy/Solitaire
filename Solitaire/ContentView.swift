@@ -85,16 +85,35 @@ struct SoliteireMainField: View {
 
 struct SoliteireCardStack: View {
     @Binding var cardSize: CGSize
+    @State var draggedIndex: Int = -1
+    @State var draggedOffset: CGSize = .zero
+    
     let cards: [Card]
     
     var body: some View {
         ZStack(alignment: .top) {
             ForEach(0..<cards.count, id: \.self) { index in
-                cards[index].getImage()
-                    .frame(width: cardSize.width, height: cardSize.height)
-                    .padding(.top, (cardSize.height / 2.0) * CGFloat(index))
-                    .shadow(color: .gray, radius: 1, y: -2)
+                getCardView(for: index)
             }
         }
+    }
+    
+    func getCardView(for index: Int) -> some View {
+        cards[index].getImage()
+            .frame(width: cardSize.width, height: cardSize.height)
+            .padding(.top, (cardSize.height / 2.0) * CGFloat(index))
+            .shadow(color: .gray, radius: 1, y: -2)
+            .offset(draggedIndex == index ? draggedOffset : .zero)
+            .gesture(DragGesture(coordinateSpace: .global)
+                .onChanged { value in
+                    draggedIndex = index
+                    draggedOffset = value.translation
+                }
+                .onEnded { value in
+                    draggedIndex = -1
+                    draggedOffset = .zero
+                    print(value.predictedEndLocation)
+                }
+            )
     }
 }
