@@ -16,6 +16,7 @@ struct ContentView: View {
     @State var exposedDeck: [Card] = []
     
     @State var cardStacks: [[Card]] = []
+    @State var cardStacksFrames: [Int : CGRect] = [:]
     
     @State var sortedStacks: [Card.Suit: [Card]] = [:]
     
@@ -60,6 +61,8 @@ struct ContentView: View {
                                    cards: cardStacks,
                                    onDragEnded: { cards, endPoint in
                     handleDragEnd(of: cards, at: endPoint)
+                }, onRowAppeared: { row, frame in
+                    cardStacksFrames[row] = frame
                 })
             }
             
@@ -68,8 +71,12 @@ struct ContentView: View {
     }
     
     func handleDragEnd(of cards: [Card], at endPoint: CGPoint) {
-        print(cards.map({ $0.name }))
-        print(endPoint, terminator: "\n\n")
+        guard let endStackIndex = cardStacksFrames.first(where: { $0.value.contains(endPoint) })?.key,
+              let startStackIndex = cardStacks.firstIndex(where: { $0.contains(where: { $0.id == cards.first?.id }) })
+        else { return }
+        
+        cardStacks[startStackIndex].removeLast(cards.count)
+        cardStacks[endStackIndex].append(contentsOf: cards)
     }
 }
 
@@ -81,15 +88,22 @@ struct SoliteireMainField: View {
     @Binding var cardSize: CGSize
     
     let cards: [[Card]]
-    
+    /// Dragged cards array, drag end location
     let onDragEnded: (([Card], CGPoint) -> Void)
+    /// ID of a row, it's frame
+    let onRowAppeared: ((Int, CGRect) -> Void)
     
     var body: some View {
         HStack(alignment: .top, spacing: 0) {
             ForEach(0..<cards.count, id: \.self) { row in
-                SoliteireCardStack(cardSize: $cardSize,
-                                   cards: cards[row],
-                                   onDragEnded: onDragEnded)
+                GeometryReader { geometry in
+                    SoliteireCardStack(cardSize: $cardSize,
+                                       cards: cards[row],
+                                       onDragEnded: onDragEnded)
+                    .onAppear {
+                        onRowAppeared(row, geometry.frame(in: .global))
+                    }
+                }
             }
         }
     }
@@ -122,20 +136,24 @@ struct SoliteireCardStack: View {
                 }
                 .onEnded { value in
                     draggedOffset = .zero
-                    onDragEnded(cards, value.predictedEndLocation)
+                    onDragEnded(cards, value.location)
                 }
             )
         } else {
-            Image("Ace_spades")
-                .resizable()
-                .aspectRatio(contentMode: .fill)
-                .frame(width: cardSize.width, height: cardSize.height)
-                .opacity(0)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 10)
-                        .stroke(Color(red: 244/255, green: 247/255, blue: 224/255), lineWidth: 1)
-                )
+            getEmptyCardView()
         }
+    }
+    
+    func getEmptyCardView() -> some View {
+        Image("Ace_spades")
+            .resizable()
+            .aspectRatio(contentMode: .fill)
+            .frame(width: cardSize.width, height: cardSize.height)
+            .opacity(0)
+            .overlay(
+                RoundedRectangle(cornerRadius: 10)
+                    .stroke(Color(red: 244/255, green: 247/255, blue: 224/255), lineWidth: 1)
+            )
     }
     
     func getCardView(for card: Card) -> some View {
