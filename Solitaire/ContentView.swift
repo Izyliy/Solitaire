@@ -57,11 +57,19 @@ struct ContentView: View {
                 Text("Loading...")
             } else {
                 SoliteireMainField(cardSize: $cardSize,
-                                   cards: cardStacks)
+                                   cards: cardStacks,
+                                   onDragEnded: { cards, endPoint in
+                    handleDragEnd(of: cards, at: endPoint)
+                })
             }
             
             Spacer()
         }
+    }
+    
+    func handleDragEnd(of cards: [Card], at endPoint: CGPoint) {
+        print(cards.map({ $0.name }))
+        print(endPoint, terminator: "\n\n")
     }
 }
 
@@ -71,13 +79,17 @@ struct ContentView: View {
 
 struct SoliteireMainField: View {
     @Binding var cardSize: CGSize
+    
     let cards: [[Card]]
+    
+    let onDragEnded: (([Card], CGPoint) -> Void)
     
     var body: some View {
         HStack(alignment: .top, spacing: 0) {
             ForEach(0..<cards.count, id: \.self) { row in
                 SoliteireCardStack(cardSize: $cardSize,
-                                   cards: cards[row])
+                                   cards: cards[row],
+                                   onDragEnded: onDragEnded)
             }
         }
     }
@@ -89,13 +101,17 @@ struct SoliteireCardStack: View {
     
     let cards: [Card]
     
+    let onDragEnded: (([Card], CGPoint) -> Void)
+
     var body: some View {
         if let card = cards.first {
             ZStack(alignment: .top) {
                 getCardView(for: card)
                 if cards.count > 1 {
                     let subDeck = Array(cards.dropFirst())
-                    SoliteireCardStack(cardSize: $cardSize, cards: subDeck)
+                    SoliteireCardStack(cardSize: $cardSize,
+                                       cards: subDeck,
+                                       onDragEnded: onDragEnded)
                         .padding(.top, (cardSize.height / 2.0))
                 }
             }
@@ -106,7 +122,7 @@ struct SoliteireCardStack: View {
                 }
                 .onEnded { value in
                     draggedOffset = .zero
-                    print(value.predictedEndLocation)
+                    onDragEnded(cards, value.predictedEndLocation)
                 }
             )
         } else {
