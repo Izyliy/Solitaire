@@ -70,7 +70,9 @@ struct Card: Codable, Transferable {
         case ace = "Ace"
     }
     
-    enum Suit: String, CaseIterable, Codable {
+    enum Suit: String, CaseIterable, Codable, Hashable, Identifiable {
+        var id: String { rawValue }
+        
         case spades
         case hearts
         case diamonds

@@ -18,7 +18,11 @@ struct ContentView: View {
     @State var cardStacks: [[Card]] = []
     @State var cardStacksFrames: [Int : CGRect] = [:]
     
-    @State var sortedStacks: [Card.Suit: [Card]] = [:]
+    @State var sortedStacks: [Card.Suit: [Card]] = {
+        var dict = [Card.Suit: [Card]]()
+        for suit in Card.Suit.allCases { dict[suit] = [] }
+        return dict
+    }()
     
     init() {
         self.deck = DeckBuilder.create52Cards().shuffled()
@@ -57,6 +61,11 @@ struct ContentView: View {
             if cardStacks.isEmpty {
                 Text("Loading...")
             } else {
+                SolitareTopField(cardSize: $cardSize,
+                                 sortedStacks: sortedStacks,
+                                 deck: deck,
+                                 exposedDeck: exposedDeck)
+                
                 SoliteireMainField(cardSize: $cardSize,
                                    cards: cardStacks,
                                    onDragEnded: { cards, endPoint in
@@ -82,6 +91,52 @@ struct ContentView: View {
 
 #Preview {
     ContentView()
+}
+
+struct SolitareTopField: View {
+    let allSuits: [Card.Suit] = Card.Suit.allCases
+    @Binding var cardSize: CGSize
+    @State var sortedStacks: [Card.Suit: [Card]]
+    @State var deck: [Card]
+    @State var exposedDeck: [Card]
+    
+    var body: some View {
+        HStack {
+            getSortedStacksView()
+            Spacer()
+            getDeckView()
+        }
+    }
+    
+    func getSortedStacksView() -> some View {
+        HStack(spacing: 0) {
+            ForEach(allSuits) { suit in
+                if let biggestCard = sortedStacks[suit]?.sorted(by: { $0.value > $1.value }).first {
+                    biggestCard.getImage()
+                        .frame(width: cardSize.width, height: cardSize.height)
+                        .shadow(color: .gray, radius: 1, y: -2)
+                } else {
+                    let card = Card(id: UUID(), rank: .ace, suit: suit, isFaceUp: true)
+                    card.getImage()
+                        .frame(width: cardSize.width, height: cardSize.height)
+                        .shadow(color: .gray, radius: 1, y: -2)
+                        .opacity(0.3)
+                }
+            }
+        }
+    }
+    
+    func getDeckView() -> some View {
+        HStack {
+            Spacer()
+            if let card = deck.first {
+                let card1 = Card(id: UUID(), rank: .ace, suit: .clubs, isFaceUp: false)
+                card1.getImage()
+                    .frame(width: cardSize.width, height: cardSize.height)
+                    .shadow(color: .gray, radius: 1, y: -2)
+            }
+        }
+    }
 }
 
 struct SoliteireMainField: View {
