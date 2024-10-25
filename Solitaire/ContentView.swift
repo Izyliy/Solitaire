@@ -96,16 +96,33 @@ struct SoliteireMainField: View {
     var body: some View {
         HStack(alignment: .top, spacing: 0) {
             ForEach(0..<cards.count, id: \.self) { row in
-                GeometryReader { geometry in
-                    SoliteireCardStack(cardSize: $cardSize,
-                                       cards: cards[row],
-                                       onDragEnded: onDragEnded)
-                    .onAppear {
-                        onRowAppeared(row, geometry.frame(in: .global))
+                ZStack(alignment: .top) {
+                    getEmptyCardView()
+                    if cards[row].count != 0 {
+                        GeometryReader { geometry in
+                            SoliteireCardStack(cardSize: $cardSize,
+                                               cards: cards[row],
+                                               onDragEnded: onDragEnded)
+                            .onAppear {
+                                onRowAppeared(row, geometry.frame(in: .global))
+                            }
+                        }
                     }
                 }
             }
         }
+    }
+    
+    func getEmptyCardView() -> some View {
+        Image("Ace_spades")
+            .resizable()
+            .aspectRatio(contentMode: .fill)
+            .frame(width: cardSize.width, height: cardSize.height)
+            .opacity(0)
+            .overlay(
+                RoundedRectangle(cornerRadius: 10)
+                    .stroke(Color(red: 244/255, green: 247/255, blue: 224/255), lineWidth: 1)
+            )
     }
 }
 
@@ -139,21 +156,7 @@ struct SoliteireCardStack: View {
                     onDragEnded(cards, value.location)
                 }
             )
-        } else {
-            getEmptyCardView()
         }
-    }
-    
-    func getEmptyCardView() -> some View {
-        Image("Ace_spades")
-            .resizable()
-            .aspectRatio(contentMode: .fill)
-            .frame(width: cardSize.width, height: cardSize.height)
-            .opacity(0)
-            .overlay(
-                RoundedRectangle(cornerRadius: 10)
-                    .stroke(Color(red: 244/255, green: 247/255, blue: 224/255), lineWidth: 1)
-            )
     }
     
     func getCardView(for card: Card) -> some View {
