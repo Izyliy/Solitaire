@@ -38,8 +38,9 @@ struct ContentView: View {
             }
             .onAppear {
                 for i in 1...cardStacksCount {
-                    let stack = Array(deck.prefix(i))
+                    var stack = Array(deck.prefix(i))
                     self.deck.removeFirst(i)
+                    stack[stack.count - 1].isFaceUp = true
                     cardStacks.append(stack)
                 }
                 
@@ -84,8 +85,18 @@ struct ContentView: View {
               let startStackIndex = cardStacks.firstIndex(where: { $0.contains(where: { $0.id == cards.first?.id }) })
         else { return }
         
+        let guestCardValue = cards.first?.value ?? -1
+        let homeCardValue = cardStacks[endStackIndex].last?.value ?? 14
+        
+        guard guestCardValue + 1 == homeCardValue else { return }
+
         cardStacks[startStackIndex].removeLast(cards.count)
         cardStacks[endStackIndex].append(contentsOf: cards)
+        
+        let exposedCardIndex = cardStacks[startStackIndex].count - 1
+        if exposedCardIndex >= 0 {
+            cardStacks[startStackIndex][exposedCardIndex].isFaceUp = true
+        }
     }
 }
 
@@ -204,9 +215,11 @@ struct SoliteireCardStack: View {
             .offset(draggedOffset)
             .gesture(DragGesture(coordinateSpace: .global)
                 .onChanged { value in
+                    guard card.isFaceUp else { return }
                     draggedOffset = value.translation
                 }
                 .onEnded { value in
+                    guard card.isFaceUp else { return }
                     draggedOffset = .zero
                     onDragEnded(cards, value.location)
                 }

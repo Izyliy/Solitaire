@@ -54,6 +54,10 @@ struct Card: Codable, Transferable {
             .aspectRatio(contentMode: .fit)
     }
     
+    mutating func flip() {
+        isFaceUp.toggle()
+    }
+    
     enum Rank: String, CaseIterable, Codable {
         case _2 = "2"
         case _3 = "3"
@@ -86,7 +90,7 @@ struct DeckBuilder {
         
         for rank in Card.Rank.allCases {
             for suit in Card.Suit.allCases {
-                deck.append(Card(id: UUID(), rank: rank, suit: suit, isFaceUp: true))
+                deck.append(Card(id: UUID(), rank: rank, suit: suit, isFaceUp: false))
             }
         }
         
